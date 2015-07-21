@@ -675,7 +675,7 @@ Test whether or not the given path exists by checking with the file system.
 Then call the `callback` argument with either true or false.  Example:
 
     fs.exists('/etc/passwd', function (exists) {
-      util.debug(exists ? "it's there" : "no passwd!");
+      console.error(exists ? "it's there" : "no passwd!");
     });
 
 `fs.exists()` is an anachronism and exists only for historical reasons.
@@ -718,7 +718,7 @@ argument will be populated. The following example checks if the file
 `/etc/passwd` can be read and written by the current process.
 
     fs.access('/etc/passwd', fs.R_OK | fs.W_OK, function(err) {
-      util.debug(err ? 'no access!' : 'can read/write');
+      console.error(err ? 'no access!' : 'can read/write');
     });
 
 ## fs.accessSync(path[, mode])
