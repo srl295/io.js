@@ -27,6 +27,32 @@
 #include <unicode/udata.h>
 
 #ifdef NODE_HAVE_SMALL_ICU
+
+#ifndef NODE_SPECIAL_ICU_DIR
+#define NODE_SPECIAL_ICU_DIR "kittens"
+#endif
+
+#ifdef NODE_SPECIAL_ICU_DIR
+#include <stdio.h>
+/**
+ * cheap "access" function.
+ *
+ * @param s
+ * @return nonzero if "s" is readable
+ */
+static int cheap_access(const char *s) {
+  FILE *f = fopen(s, "r");
+  if(f) {
+    fclose(f);
+    printf("yay: %s\n", s);
+    return 1;
+  } else {
+    printf("NAY: %s\n", s);
+    return 0;
+  }
+}
+#endif
+
 /* if this is defined, we have a 'secondary' entry point.
    compare following to utypes.h defs for U_ICUDATA_ENTRY_POINT */
 #define SMALL_ICUDATA_ENTRY_POINT \
@@ -51,6 +77,30 @@ bool InitializeICUDirectory(const char* icu_data_path) {
   } else {
     UErrorCode status = U_ZERO_ERROR;
 #ifdef NODE_HAVE_SMALL_ICU
+
+#ifdef NODE_SPECIAL_ICU_DIR
+
+    char postfix[2048];
+    strcpy(postfix, NODE_SPECIAL_ICU_DIR); // kittens
+    strcat(postfix, U_FILE_SEP_STRING);    // /
+    strcat(postfix, U_ICUDATA_NAME);       // icudt23e
+    strcat(postfix, ".dat");               // .dat
+    puts(postfix);
+
+    if(cheap_access(postfix)) {
+      u_setDataDirectory(postfix);
+      return (status == U_ZERO_ERROR);
+    }
+
+    char dir[2048];
+    strcpy(dir, "/usr/local/");
+    strcat(dir, postfix);
+    if(cheap_access(dir)) {
+      u_setDataDirectory(dir);
+      return (status == U_ZERO_ERROR);
+    }      
+    
+#endif    
     // install the 'small' data.
     udata_setCommonData(&SMALL_ICUDATA_ENTRY_POINT, &status);
 #else  // !NODE_HAVE_SMALL_ICU
