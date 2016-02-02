@@ -13,7 +13,7 @@ extern bool flag_icu_data_dir;
 
 namespace i18n {
 
-bool InitializeICUDirectory(const char* icu_data_path);
+bool InitializeICUDirectory(const char* icu_data_path, const char *argv0);
 
 int32_t ToASCII(MaybeStackBuffer<char>* buf,
                 const char* input,

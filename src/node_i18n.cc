@@ -45,6 +45,34 @@
 #include <unicode/uversion.h>
 
 #ifdef NODE_HAVE_SMALL_ICU
+
+#include <limits.h>  // PATH_MAX
+
+#ifndef NODE_SPECIAL_ICU_DIR
+#define NODE_SPECIAL_ICU_DIR ".node-icu"
+#endif
+
+#ifdef NODE_SPECIAL_ICU_DIR
+#include <stdio.h>
+/**
+ * cheap "access" function.
+ *
+ * @param s
+ * @return nonzero if "s" is readable
+ */
+static int cheap_access(const char *s) {
+  FILE *f = fopen(s, "r");
+  if(f) {
+    fclose(f);
+    printf("yay: %s\n", s);
+    return 1;
+  } else {
+    printf("NAY: %s\n", s);
+    return 0;
+  }
+}
+#endif
+
 /* if this is defined, we have a 'secondary' entry point.
    compare following to utypes.h defs for U_ICUDATA_ENTRY_POINT */
 #define SMALL_ICUDATA_ENTRY_POINT \
@@ -404,7 +432,7 @@ static void GetVersion(const FunctionCallbackInfo<Value>& args) {
   }
 }
 
-bool InitializeICUDirectory(const char* icu_data_path) {
+bool InitializeICUDirectory(const char* icu_data_path, const char *argv0) {
   if (icu_data_path != nullptr) {
     flag_icu_data_dir = true;
     u_setDataDirectory(icu_data_path);
@@ -412,6 +440,53 @@ bool InitializeICUDirectory(const char* icu_data_path) {
   } else {
     UErrorCode status = U_ZERO_ERROR;
 #ifdef NODE_HAVE_SMALL_ICU
+
+#ifdef NODE_SPECIAL_ICU_DIR
+
+    char postfix[2048];
+    strcpy(postfix, "node_modules" U_FILE_SEP_STRING
+                    NODE_SPECIAL_ICU_DIR U_FILE_SEP_STRING
+                    U_ICUDATA_NAME);       // icudt23e
+    strcat(postfix, ".dat");               // .dat
+    puts(postfix);
+
+    // try ./node_modules/
+    if(cheap_access(postfix)) {
+      u_setDataDirectory(postfix);
+      return (status == U_ZERO_ERROR);
+    }
+    
+    char dir[2048];
+    // try home or userprofile
+    strcpy(dir, getenv("HOME")); // TODO: userprofile
+    strcat(dir, U_FILE_SEP_STRING ".");
+    strcat(dir, postfix);
+    if(cheap_access(dir)) {
+      u_setDataDirectory(dir);
+      return (status == U_ZERO_ERROR);
+    }
+
+    // try execpath/../../lib/node/…
+    size_t exec_path_len = 2 * PATH_MAX;
+    char* exec_path = new char[exec_path_len];
+    if (uv_exepath(exec_path, &exec_path_len) != 0) { // TODO: coalesce with call to uv_exepath in node.cc
+        puts(" - no exec path " );
+        strcpy(dir, argv0);
+    } else {
+        puts(exec_path);
+        strcpy(dir, exec_path);
+    }
+    delete [] exec_path;
+    strcat(dir, U_FILE_SEP_STRING ".." U_FILE_SEP_STRING ".." U_FILE_SEP_STRING "node" U_FILE_SEP_STRING  ".." U_FILE_SEP_STRING);
+    strcat(dir, postfix);
+    if(cheap_access(dir)) {
+      u_setDataDirectory(dir);
+      return (status == U_ZERO_ERROR);
+    }
+    
+    
+    
+#endif    
     // install the 'small' data.
     udata_setCommonData(&SMALL_ICUDATA_ENTRY_POINT, &status);
 #else  // !NODE_HAVE_SMALL_ICU
