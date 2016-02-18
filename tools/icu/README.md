@@ -1,6 +1,66 @@
 Notes about the icu directory.
 ===
 
+How to upgrade ICU
+---
+
+- Make sure your node workspace is clean (clean `git status`) should be sufficient.
+- Configure Node with the specific [ICU version](http://icu-project.org/download) you want to upgrade to, for example:
+
+```
+./configure \
+    --with-intl=small-icu \
+    --with-icu-source=http://download.icu-project.org/files/icu4c/56.1/icu4c-56_1-src.zip
+make
+```
+
+(the equivalent `vcbuild.bat` commands should work also.)
+
+- Verify the node build works
+
+```
+make test-ci
+```
+
+Also running 
+```js
+ new Intl.DateTimeFormat('es',{month:'long'}).format(new Date(9E8));
+```
+
+…Should return `January` not `enero`. 
+(TODO here: improve [testing](https://github.com/nodejs/Intl/issues/16))
+
+
+- Now, copy `deps/icu` over to `deps/icu-small`
+
+```
+python tools/icu/shrink-icu-src.py
+```
+
+- Now, do a clean rebuild of node to test:
+
+(TODO: fix this when these options become default)
+
+```
+./configure --with-intl=small-icu --with-icu-source=deps/icu-small
+make
+```
+
+- Test this newly default-generated ndoe
+```js
+process.versions.icu;
+new Intl.DateTimeFormat('es',{month:'long'}).format(new Date(9E8));
+```
+
+(should return your updated ICU version number, and also `January` again.)
+
+- You are ready to check in the updated `deps/small-icu`.
+
+-----
+
+Notes about these tools
+---
+
 The files in this directory were written for the node.js effort. It's
 the intent of their author (Steven R. Loomis / srl295) to merge them
 upstream into ICU, pending much discussion within the ICU-PMC.
