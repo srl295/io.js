@@ -1,3 +1,4 @@
+#define ICU_LOADING_DEBUG 1
 /*
  * notes: by srl295
  *  - When in NODE_HAVE_SMALL_ICU mode, ICU is linked against "stub" (null) data
@@ -48,14 +49,11 @@
 
 #include <limits.h>  // PATH_MAX
 
-#ifndef NODE_SPECIAL_ICU_DIR
-#define NODE_SPECIAL_ICU_DIR ".node-icu"
-#endif
-
 #ifdef NODE_SPECIAL_ICU_DIR
 #include <stdio.h>
 /**
- * cheap "access" function.
+ * Temporary cheap "access" function.
+ * Should be replaced with libuv etc.
  *
  * @param s
  * @return nonzero if "s" is readable
@@ -64,10 +62,14 @@ static int cheap_access(const char *s) {
   FILE *f = fopen(s, "r");
   if(f) {
     fclose(f);
-    printf("yay: %s\n", s);
+#ifdef ICU_LOADING_DEBUG
+    printf("ICU_LOADING_DEBUG: Found!     %s\n", s);
+#endif
     return 1;
   } else {
-    printf("NAY: %s\n", s);
+#ifdef ICU_LOADING_DEBUG
+    printf("ICU_LOADING_DEBUG: Not Found: %s\n", s);
+#endif
     return 0;
   }
 }
@@ -443,12 +445,15 @@ bool InitializeICUDirectory(const char* icu_data_path, const char *argv0) {
 
 #ifdef NODE_SPECIAL_ICU_DIR
 
-    char postfix[2048];
+    char postfix[PATH_MAX];
     strcpy(postfix, "node_modules" U_FILE_SEP_STRING
                     NODE_SPECIAL_ICU_DIR U_FILE_SEP_STRING
                     U_ICUDATA_NAME);       // icudt23e
     strcat(postfix, ".dat");               // .dat
+#ifdef ICU_LOADING_DEBUG
+    puts("ICU_LOADING_DEBUG: Trying special directory:");
     puts(postfix);
+#endif
 
     // try ./node_modules/
     if(cheap_access(postfix)) {
@@ -470,10 +475,15 @@ bool InitializeICUDirectory(const char* icu_data_path, const char *argv0) {
     size_t exec_path_len = 2 * PATH_MAX;
     char* exec_path = new char[exec_path_len];
     if (uv_exepath(exec_path, &exec_path_len) != 0) { // TODO: coalesce with call to uv_exepath in node.cc
-        puts(" - no exec path " );
+#ifdef ICU_LOADING_DEBUG
+        puts("ICU_LOADING_DEBUG: - no exec path " );
+#endif
         strcpy(dir, argv0);
     } else {
+#ifdef ICU_LOADING_DEBUG
+        puts("ICU_LOADING_DEBUG: Trying exec path");
         puts(exec_path);
+#endif
         strcpy(dir, exec_path);
     }
     delete [] exec_path;

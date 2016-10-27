@@ -1,6 +1,10 @@
 #ifndef SRC_NODE_I18N_H_
 #define SRC_NODE_I18N_H_
 
+#ifndef NODE_SPECIAL_ICU_DIR
+#define NODE_SPECIAL_ICU_DIR ".node-icu"
+#endif
+
 #if defined(NODE_WANT_INTERNALS) && NODE_WANT_INTERNALS
 
 #include "node.h"
