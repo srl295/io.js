@@ -1108,20 +1108,15 @@ def icudeps_to_subdeps(modules, mpath):
   '''Expand ICU modules to all subdependencies'''
   subdeps = set()
   for module in modules:
+    subdeps.add(module)
     subpath = '%s->%s' % (mpath, module)
+    # print subpath
     if not module in icu_dependencies.items:
       print('%s: Error: icudeps_to_subdeps: unknown ICU dependency %s' % (subpath, module))
       sys.exit(1)
     item = icu_dependencies.items[module]
-    if item['type'] == 'library':
-      # ignoring libraries for this use
-      return set()
-    if item['type'] != 'group':
-      print('%s: Error: not a group, but %s' % (subpath, item['type']))
-      sys.exit(1)
-    subdeps.add(module)
     if 'deps' in item:
-      subdeps = subdeps | icudeps_to_subdeps(item['deps'], subpath)
+      subdeps |= icudeps_to_subdeps(item['deps'], subpath)
   return subdeps
 
 def icudeps_to_files(modules, dir_base, dir_sub, patch_sub, mpath):
@@ -1137,13 +1132,6 @@ def icudeps_to_files(modules, dir_base, dir_sub, patch_sub, mpath):
     # 'type': 'group', 
     # 'name': 'patternprops',
     # 'library': 'common'}
-    type = item['type']
-    if item['type'] == 'library':
-      # ignoring libraries for this use
-      return set()
-    if item['type'] != 'group':
-      print('%s: Error: not a group, but %s' % (subpath, item['type']))
-      sys.exit(1)
     if 'files' in item:
       objects = objects | item['files']
   # Now, convert objects to globbed paths.
@@ -1163,11 +1151,11 @@ def icudeps_to_files(modules, dir_base, dir_sub, patch_sub, mpath):
       print('%s: cannot find ICU sourcefile %s.{c,cpp}' % (subpath, realbase))
       sys.exit(1)
     # now we have a valid dirname/base
-    srcfile = '%s/%s/%s' % (dir_sub, dirname, base)
+    srcfile = os.path.join(dir_sub, dirname, base)
     if patch_sub:
-      patchfile = '%s/%s/%s/%s' % (dir_base, patch_sub, dirname, base)
+      patchfile = os.path.join(dir_base, patch_sub, dirname, base)
       if os.path.isfile(patchfile):
-        srcfile = '%s/%s/%s' % (patch_sub, dirname, base)
+        srcfile = os.path.join(patch_sub, dirname, base)
         print('Using version-specific floating patch %s' % patchfile)
     files.add(srcfile)
   return files
@@ -1442,9 +1430,12 @@ def configure_intl(o):
   # Left hand side is the variable name
   # Right hand side is a list of groups (see ICU dependencies.txt)
   icu_deps = {
-     'icu_src_core': ['trigonometry'],
-     'icu_src_core_for_tools': ['idna2003'],
+     'icu_src_core': set(['formatting']),
+     # tools have more dependencies because of swap
+     'icu_src_core_for_tools': set(['translit', 'spoof_detection'])
   }
+  # icu_src_core_for_tools is a superset
+  icu_deps['icu_src_core_for_tools'] = icu_deps['icu_src_core_for_tools'] | icu_deps['icu_src_core']
   # load dependencies
   # TODO: check file
   icu_dependencies.Load('deps/icu-small/source/test/depstest/dependencies.txt')
@@ -1452,6 +1443,7 @@ def configure_intl(o):
   # write icu_src_core from dependencies.txt
   for var in icu_deps:
     modules = icudeps_to_subdeps(icu_deps[var], '(Node.js)')
+    print 'All ICU modules for %s: %s' % (var, modules)
     thefiles = icudeps_to_files(set(modules), 'tools/icu', '../../%s/source/' % icu_full_path, 'patches/%s/source/' % icu_ver_major, '(Node.js)')
     icu_config['variables'][var] = list(thefiles)
 
