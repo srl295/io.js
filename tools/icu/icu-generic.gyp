@@ -101,110 +101,6 @@
         ],
       },
     },
-    {
-      'target_name': 'icui18n',
-      'toolsets': [ 'target', 'host' ],
-      'conditions' : [
-        ['_toolset=="target"', {
-          'type': '<(library)',
-          'sources': [
-            '<@(icu_src_i18n)'
-          ],
-          ## if your compiler can dead-strip, these exclusions will
-          ## make ZERO difference to binary size.
-          ## Made ICU-specific for future-proofing.
-          'conditions': [
-            [ 'icu_ver_major == 55', { 'sources!': [
-              # alphabetic index
-              '<(icu_path)/source/i18n/alphaindex.cpp',
-              # BOCSU
-              # misc
-              '<(icu_path)/source/i18n/regexcmp.cpp',
-              '<(icu_path)/source/i18n/regexcmp.h',
-              '<(icu_path)/source/i18n/regexcst.h',
-              '<(icu_path)/source/i18n/regeximp.cpp',
-              '<(icu_path)/source/i18n/regeximp.h',
-              '<(icu_path)/source/i18n/regexst.cpp',
-              '<(icu_path)/source/i18n/regexst.h',
-              '<(icu_path)/source/i18n/regextxt.cpp',
-              '<(icu_path)/source/i18n/regextxt.h',
-              '<(icu_path)/source/i18n/region.cpp',
-              '<(icu_path)/source/i18n/region_impl.h',
-              '<(icu_path)/source/i18n/reldatefmt.cpp',
-              '<(icu_path)/source/i18n/reldatefmt.h'
-              '<(icu_path)/source/i18n/scientificformathelper.cpp',
-              '<(icu_path)/source/i18n/tmunit.cpp',
-              '<(icu_path)/source/i18n/tmutamt.cpp',
-              '<(icu_path)/source/i18n/tmutfmt.cpp',
-              '<(icu_path)/source/i18n/uregex.cpp',
-              '<(icu_path)/source/i18n/uregexc.cpp',
-              '<(icu_path)/source/i18n/uregion.cpp',
-              '<(icu_path)/source/i18n/uspoof.cpp',
-              '<(icu_path)/source/i18n/uspoof_build.cpp',
-              '<(icu_path)/source/i18n/uspoof_conf.cpp',
-              '<(icu_path)/source/i18n/uspoof_conf.h',
-              '<(icu_path)/source/i18n/uspoof_impl.cpp',
-              '<(icu_path)/source/i18n/uspoof_impl.h',
-              '<(icu_path)/source/i18n/uspoof_wsconf.cpp',
-              '<(icu_path)/source/i18n/uspoof_wsconf.h',
-            ]}],
-            [ 'icu_ver_major == 57', { 'sources!': [
-
-              # alphabetic index
-              '<(icu_path)/source/i18n/alphaindex.cpp',
-              # BOCSU
-              # misc
-              '<(icu_path)/source/i18n/regexcmp.cpp',
-              '<(icu_path)/source/i18n/regexcmp.h',
-              '<(icu_path)/source/i18n/regexcst.h',
-              '<(icu_path)/source/i18n/regeximp.cpp',
-              '<(icu_path)/source/i18n/regeximp.h',
-              '<(icu_path)/source/i18n/regexst.cpp',
-              '<(icu_path)/source/i18n/regexst.h',
-              '<(icu_path)/source/i18n/regextxt.cpp',
-              '<(icu_path)/source/i18n/regextxt.h',
-              '<(icu_path)/source/i18n/region.cpp',
-              '<(icu_path)/source/i18n/region_impl.h',
-              '<(icu_path)/source/i18n/reldatefmt.cpp',
-              '<(icu_path)/source/i18n/reldatefmt.h'
-              '<(icu_path)/source/i18n/scientificformathelper.cpp',
-              '<(icu_path)/source/i18n/tmunit.cpp',
-              '<(icu_path)/source/i18n/tmutamt.cpp',
-              '<(icu_path)/source/i18n/tmutfmt.cpp',
-              '<(icu_path)/source/i18n/uregex.cpp',
-              '<(icu_path)/source/i18n/uregexc.cpp',
-              '<(icu_path)/source/i18n/uregion.cpp',
-              '<(icu_path)/source/i18n/uspoof.cpp',
-              '<(icu_path)/source/i18n/uspoof_build.cpp',
-              '<(icu_path)/source/i18n/uspoof_conf.cpp',
-              '<(icu_path)/source/i18n/uspoof_conf.h',
-              '<(icu_path)/source/i18n/uspoof_impl.cpp',
-              '<(icu_path)/source/i18n/uspoof_impl.h',
-              '<(icu_path)/source/i18n/uspoof_wsconf.cpp',
-              '<(icu_path)/source/i18n/uspoof_wsconf.h',
-            ]}],
-            ],
-          'include_dirs': [
-            '<(icu_path)/source/i18n',
-          ],
-          'defines': [
-            'U_I18N_IMPLEMENTATION=1',
-          ],
-          'dependencies': [ 'icuucx', 'icu_implementation', 'icu_uconfig', 'icu_uconfig_target' ],
-          'direct_dependent_settings': {
-            'include_dirs': [
-              '<(icu_path)/source/i18n',
-            ],
-          },
-          'export_dependent_settings': [ 'icuucx', 'icu_uconfig_target' ],
-        }],
-        ['_toolset=="host"', {
-          'type': 'none',
-          'dependencies': [ 'icutools' ],
-          'export_dependent_settings': [ 'icutools' ],
-        }],
-      ],
-    },
     # This exports actual ICU data
     {
       'target_name': 'icudata',
@@ -395,6 +291,24 @@
         }],
       ],
     },
+    # this target is for v8 consumption.
+    # it is empty
+    # it is only built for target
+    {
+      'target_name': 'icui18n',
+      'type': 'none',
+      'toolsets': [ 'target', 'host' ],
+      'conditions' : [
+        ['_toolset=="host"', {
+          'dependencies': [ 'icuuc' ],
+          'export_dependent_settings': [ 'icuuc' ],
+        }],
+        ['_toolset=="target"', {
+          'dependencies': [ 'icuuc' ],
+          'export_dependent_settings': [ 'icuuc' ],
+        }],
+      ],
+    },
     # This is the 'real' icuuc.
     {
       'target_name': 'icuucx',
@@ -402,7 +316,7 @@
       'dependencies': [ 'icu_implementation', 'icu_uconfig', 'icu_uconfig_target' ],
       'toolsets': [ 'target' ],
       'sources': [
-        '<@(icu_src_common)',
+        '<@(icu_src_core)',
       ],
           ## if your compiler can dead-strip, this will
           ## make ZERO difference to binary size.
@@ -411,31 +325,31 @@
         [ 'icu_ver_major == 55', { 'sources!': [
 
           # bidi- not needed (yet!)
-          '<(icu_path)/source/common/ubidi.c',
-          '<(icu_path)/source/common/ubidiimp.h',
-          '<(icu_path)/source/common/ubidiln.c',
-          '<(icu_path)/source/common/ubidiwrt.c',
+          # '<(icu_path)/source/common/ubidi.c',
+          # '<(icu_path)/source/common/ubidiimp.h',
+          # '<(icu_path)/source/common/ubidiln.c',
+          # '<(icu_path)/source/common/ubidiwrt.c',
           #'<(icu_path)/source/common/ubidi_props.c',
           #'<(icu_path)/source/common/ubidi_props.h',
           #'<(icu_path)/source/common/ubidi_props_data.h',
           # and the callers
-          '<(icu_path)/source/common/ushape.cpp',
+          # '<(icu_path)/source/common/ushape.cpp',
         ]}],
         [ 'icu_ver_major == 57', { 'sources!': [
           # work around http://bugs.icu-project.org/trac/ticket/12451
           # (benign afterwards)
-          '<(icu_path)/source/common/cstr.cpp',
+          # '<(icu_path)/source/common/cstr.cpp',
 
           # bidi- not needed (yet!)
-          '<(icu_path)/source/common/ubidi.c',
-          '<(icu_path)/source/common/ubidiimp.h',
-          '<(icu_path)/source/common/ubidiln.c',
-          '<(icu_path)/source/common/ubidiwrt.c',
+          # '<(icu_path)/source/common/ubidi.c',
+          # '<(icu_path)/source/common/ubidiimp.h',
+          # '<(icu_path)/source/common/ubidiln.c',
+          # '<(icu_path)/source/common/ubidiwrt.c',
           #'<(icu_path)/source/common/ubidi_props.c',
           #'<(icu_path)/source/common/ubidi_props.h',
           #'<(icu_path)/source/common/ubidi_props_data.h',
           # and the callers
-          '<(icu_path)/source/common/ushape.cpp',
+          # '<(icu_path)/source/common/ushape.cpp',
         ]}],
         [ 'OS == "solaris"', { 'defines': [
           '_XOPEN_SOURCE_EXTENDED=0',
@@ -443,15 +357,18 @@
       ],
       'include_dirs': [
         '<(icu_path)/source/common',
+        '<(icu_path)/source/i18n',
       ],
       'defines': [
         'U_COMMON_IMPLEMENTATION=1',
+        'U_I18N_IMPLEMENTATION=1',
       ],
       'cflags_c': ['-std=c99'],
       'export_dependent_settings': [ 'icu_uconfig', 'icu_uconfig_target' ],
       'direct_dependent_settings': {
         'include_dirs': [
           '<(icu_path)/source/common',
+          '<(icu_path)/source/i18n',
         ],
         'conditions': [
           [ 'OS=="win"', {
@@ -470,8 +387,7 @@
       'dependencies': [ 'icu_implementation', 'icu_uconfig' ],
       'sources': [
         '<@(icu_src_tools)',
-        '<@(icu_src_common)',
-        '<@(icu_src_i18n)',
+        '<@(icu_src_core_for_tools)',
         '<@(icu_src_stubdata)',
       ],
       'sources!': [
