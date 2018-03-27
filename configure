@@ -1432,13 +1432,17 @@ def configure_intl(o):
   icu_deps = {
      'icu_src_core': set([
        'formatting',  # for number/date formatting
+       'conversion',  # for codepage conversion
+       'collation',   # collation support
        'localedata',  # for checking CLDR version
       ]),
      # tools have more dependencies because of swap
-     'icu_src_core_for_tools': set(['translit', 'spoof_detection'])
+     'icu_src_core_for_tools': set([
+       'translit',
+       'spoof_detection',
+       'common'       # includes all of common.
+      ]),
   }
-  # icu_src_core_for_tools is a superset
-  icu_deps['icu_src_core_for_tools'] = icu_deps['icu_src_core_for_tools'] | icu_deps['icu_src_core']
   # load dependencies
   # TODO: check file
   icu_dependencies.Load('deps/icu-small/source/test/depstest/dependencies.txt')
@@ -1446,9 +1450,11 @@ def configure_intl(o):
   # write icu_src_core from dependencies.txt
   for var in icu_deps:
     modules = icudeps_to_subdeps(icu_deps[var], '(Node.js)')
-    print 'All ICU modules for %s: %s' % (var, modules)
+    #print 'All ICU modules for %s: %s' % (var, modules)
     thefiles = icudeps_to_files(set(modules), 'tools/icu', '../../%s/source/' % icu_full_path, 'patches/%s/source/' % icu_ver_major, '(Node.js)')
+    print '%s: %d submodules, %d files' % (var, len(modules), len(thefiles))
     icu_config['variables'][var] = list(thefiles)
+
 
   # write updated icu_config.gypi with a bunch of paths
   write(icu_config_name, do_not_edit +
