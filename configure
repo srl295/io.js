@@ -1430,7 +1430,10 @@ def configure_intl(o):
   # Left hand side is the variable name
   # Right hand side is a list of groups (see ICU dependencies.txt)
   icu_deps = {
-     'icu_src_core': set(['formatting']),
+     'icu_src_core': set([
+       'formatting',  # for number/date formatting
+       'localedata',  # for checking CLDR version
+      ]),
      # tools have more dependencies because of swap
      'icu_src_core_for_tools': set(['translit', 'spoof_detection'])
   }

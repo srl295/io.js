@@ -10,6 +10,9 @@
 #
 # created on: 2011may26
 
+
+# Taken from ICU, with the addition of a parameter to control the input filename.
+
 """Reader module for dependency data for the ICU dependency tester.
 
 Reads dependencies.txt and makes the data available.

@@ -322,34 +322,10 @@
           ## make ZERO difference to binary size.
           ## Made ICU-specific for future-proofing.
       'conditions': [
-        [ 'icu_ver_major == 55', { 'sources!': [
-
-          # bidi- not needed (yet!)
-          # '<(icu_path)/source/common/ubidi.c',
-          # '<(icu_path)/source/common/ubidiimp.h',
-          # '<(icu_path)/source/common/ubidiln.c',
-          # '<(icu_path)/source/common/ubidiwrt.c',
-          #'<(icu_path)/source/common/ubidi_props.c',
-          #'<(icu_path)/source/common/ubidi_props.h',
-          #'<(icu_path)/source/common/ubidi_props_data.h',
-          # and the callers
-          # '<(icu_path)/source/common/ushape.cpp',
-        ]}],
         [ 'icu_ver_major == 57', { 'sources!': [
           # work around http://bugs.icu-project.org/trac/ticket/12451
           # (benign afterwards)
-          # '<(icu_path)/source/common/cstr.cpp',
-
-          # bidi- not needed (yet!)
-          # '<(icu_path)/source/common/ubidi.c',
-          # '<(icu_path)/source/common/ubidiimp.h',
-          # '<(icu_path)/source/common/ubidiln.c',
-          # '<(icu_path)/source/common/ubidiwrt.c',
-          #'<(icu_path)/source/common/ubidi_props.c',
-          #'<(icu_path)/source/common/ubidi_props.h',
-          #'<(icu_path)/source/common/ubidi_props_data.h',
-          # and the callers
-          # '<(icu_path)/source/common/ushape.cpp',
+          '<(icu_path)/source/common/cstr.cpp',
         ]}],
         [ 'OS == "solaris"', { 'defines': [
           '_XOPEN_SOURCE_EXTENDED=0',
