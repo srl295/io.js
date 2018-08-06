@@ -274,20 +274,31 @@ void SetNumericSettings(Isolate* isolate, icu::DecimalFormat* number_format,
     number_format->setMaximumFractionDigits(digits);
   }
 
-  bool significant_digits_used = false;
+  int32_t mndig = -1;
+  int32_t mxdig = -1;
+  bool mndig_used = false;
+  bool mxdig_used = false;
   if (ExtractIntegerSetting(isolate, options, "minimumSignificantDigits",
-                            &digits)) {
-    number_format->setMinimumSignificantDigits(digits);
-    significant_digits_used = true;
+                            &mndig)) {
+    mndig_used = true;
   }
 
   if (ExtractIntegerSetting(isolate, options, "maximumSignificantDigits",
-                            &digits)) {
-    number_format->setMaximumSignificantDigits(digits);
-    significant_digits_used = true;
+                            &mxdig)) {
+    mxdig_used = true;
   }
 
-  number_format->setSignificantDigitsUsed(significant_digits_used);
+  // per https://unicode-org.atlassian.net/browse/ICU-20063
+  // the following call trashes the min/max settings. So call it first.
+  number_format->setSignificantDigitsUsed(mndig_used || mxdig_used);
+
+  // Now it's safe to call set min/max
+  if(mndig_used) {
+    number_format->setMinimumSignificantDigits(digits);
+  }
+  if(mxdig_used) {
+    number_format->setMaximumSignificantDigits(digits);
+  }
 
   number_format->setRoundingMode(icu::DecimalFormat::kRoundHalfUp);
 }
