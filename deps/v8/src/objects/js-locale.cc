@@ -129,8 +129,15 @@ Handle<Object> UnicodeKeywordValue(Isolate* isolate, Handle<JSLocale> locale,
                                    const char* key) {
   icu::Locale* icu_locale = locale->icu_locale()->raw();
   UErrorCode status = U_ZERO_ERROR;
+#if U_ICU_VERSION_MAJOR_NUM < 63
+  char buf[ULOC_FULLNAME_CAPACITY] = {0};
+  int32_t len =
+     icu_locale -> getKeywordValue(key, buf, ULOC_FULLNAME_CAPACITY, status);
+  std::string value(buf, len);
+#else
   std::string value =
       icu_locale->getUnicodeKeywordValue<std::string>(key, status);
+#endif
   if (status == U_ILLEGAL_ARGUMENT_ERROR || value == "") {
     return isolate->factory()->undefined_value();
   }
@@ -260,8 +267,15 @@ Maybe<std::string> ApplyOptionsToTag(Isolate* isolate, Handle<String> tag,
         Nothing<std::string>());
   }
   UErrorCode status = U_ZERO_ERROR;
+#if U_ICU_VERSION_MAJOR_NUM < 63
+  char buf[ULOC_FULLNAME_CAPACITY+1] = {0};
+  int32_t len = uloc_forLanguageTag(*bcp47_tag, buf, ULOC_FULLNAME_CAPACITY+1,
+    NULL, &status);
+  icu::Locale icu_locale(buf);
+#else
   icu::Locale icu_locale =
       icu::Locale::forLanguageTag({*bcp47_tag, bcp47_tag.length()}, status);
+#endif
   if (U_FAILURE(status)) {
     THROW_NEW_ERROR_RETURN_VALUE(
         isolate, NewRangeError(MessageTemplate::kLocaleBadParameters),
@@ -400,8 +414,15 @@ MaybeHandle<JSLocale> JSLocale::Initialize(Isolate* isolate,
       ApplyOptionsToTag(isolate, locale_str, options);
   MAYBE_RETURN(maybe_locale, MaybeHandle<JSLocale>());
   UErrorCode status = U_ZERO_ERROR;
+#if U_ICU_VERSION_MAJOR_NUM < 63
+  char buf[ULOC_FULLNAME_CAPACITY+1] = {0};
+  int32_t len = uloc_forLanguageTag(maybe_locale.FromJust().c_str(), buf, ULOC_FULLNAME_CAPACITY+1,
+    NULL, &status);
+  icu::Locale icu_locale(buf);
+#else
   icu::Locale icu_locale =
       icu::Locale::forLanguageTag(maybe_locale.FromJust().c_str(), status);
+#endif
   if (U_FAILURE(status)) {
     THROW_NEW_ERROR(isolate,
                     NewRangeError(MessageTemplate::kLocaleBadParameters),
@@ -428,8 +449,15 @@ namespace {
 Handle<String> MorphLocale(Isolate* isolate, String locale,
                            void (*morph_func)(icu::Locale*, UErrorCode*)) {
   UErrorCode status = U_ZERO_ERROR;
+#if U_ICU_VERSION_MAJOR_NUM < 63
+  char buf[ULOC_FULLNAME_CAPACITY+1] = {0};
+  int32_t len = uloc_forLanguageTag(locale.ToCString().get(), buf, ULOC_FULLNAME_CAPACITY+1,
+    NULL, &status);
+  icu::Locale icu_locale(buf);
+#else
   icu::Locale icu_locale =
       icu::Locale::forLanguageTag(locale.ToCString().get(), status);
+#endif
   // TODO(ftang): Remove the following lines after ICU-8420 fixed.
   // Due to ICU-8420 "und" is turn into "" by forLanguageTag,
   // we have to work around to use icu::Locale("und") directly
@@ -448,14 +476,18 @@ Handle<String> MorphLocale(Isolate* isolate, String locale,
 Handle<String> JSLocale::Maximize(Isolate* isolate, String locale) {
   return MorphLocale(isolate, locale,
                      [](icu::Locale* icu_locale, UErrorCode* status) {
+#if U_ICU_VERSION_MAJOR_NUM >= 63
                        icu_locale->addLikelySubtags(*status);
+#endif
                      });
 }
 
 Handle<String> JSLocale::Minimize(Isolate* isolate, String locale) {
   return MorphLocale(isolate, locale,
                      [](icu::Locale* icu_locale, UErrorCode* status) {
+#if U_ICU_VERSION_MAJOR_NUM >= 63
                        icu_locale->minimizeSubtags(*status);
+#endif
                      });
 }
 
@@ -507,8 +539,15 @@ Handle<Object> JSLocale::Numeric(Isolate* isolate, Handle<JSLocale> locale) {
   Factory* factory = isolate->factory();
   icu::Locale* icu_locale = locale->icu_locale()->raw();
   UErrorCode status = U_ZERO_ERROR;
+#if U_ICU_VERSION_MAJOR_NUM < 63
+  char buf[ULOC_FULLNAME_CAPACITY] = {0};
+  int32_t len =
+     icu_locale -> getKeywordValue("kn", buf, ULOC_FULLNAME_CAPACITY, status);
+  std::string numeric(buf, len);
+#else
   std::string numeric =
       icu_locale->getUnicodeKeywordValue<std::string>("kn", status);
+#endif
   return (numeric == "true") ? factory->true_value() : factory->false_value();
 }
 

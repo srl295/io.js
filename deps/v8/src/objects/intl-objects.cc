@@ -410,7 +410,14 @@ icu::Locale Intl::CreateICULocale(const std::string& bcp47_locale) {
   // Convert BCP47 into ICU locale format.
   UErrorCode status = U_ZERO_ERROR;
 
+#if U_ICU_VERSION_MAJOR_NUM < 63
+  char buf[ULOC_FULLNAME_CAPACITY+1] = {0};
+  int32_t len = uloc_forLanguageTag(bcp47_locale.c_str(), buf, ULOC_FULLNAME_CAPACITY+1,
+    NULL, &status);
+  icu::Locale icu_locale(buf);
+#else
   icu::Locale icu_locale = icu::Locale::forLanguageTag(bcp47_locale, status);
+#endif
   CHECK(U_SUCCESS(status));
   if (icu_locale.isBogus()) {
     FATAL("Failed to create ICU locale, are ICU data files missing?");
@@ -519,7 +526,14 @@ std::set<std::string> Intl::BuildLocaleSet(
 
 Maybe<std::string> Intl::ToLanguageTag(const icu::Locale& locale) {
   UErrorCode status = U_ZERO_ERROR;
+#if U_ICU_VERSION_MAJOR_NUM < 63
+  char buf[ULOC_FULLNAME_CAPACITY] = {0};
+  int32_t len =
+      uloc_toLanguageTag(locale.getName(), buf, ULOC_FULLNAME_CAPACITY+1, false, &status);
+  std::string res(buf, len);
+#else
   std::string res = locale.toLanguageTag<std::string>(status);
+#endif
   if (U_FAILURE(status)) {
     return Nothing<std::string>();
   }
@@ -781,7 +795,14 @@ Maybe<std::string> Intl::CanonicalizeLanguageTag(Isolate* isolate,
   // language tag is parsed all the way to the end, it indicates that the input
   // is structurally valid. Due to a couple of bugs, we can't use it
   // without Chromium patches or ICU 62 or earlier.
+#if U_ICU_VERSION_MAJOR_NUM < 63
+  char buf[ULOC_FULLNAME_CAPACITY+1] = {0};
+  int32_t len = uloc_forLanguageTag(locale.c_str(), buf, ULOC_FULLNAME_CAPACITY+1,
+    NULL, &error);
+  icu::Locale icu_locale(buf);
+#else
   icu::Locale icu_locale = icu::Locale::forLanguageTag(locale.c_str(), error);
+#endif
   if (U_FAILURE(error) || icu_locale.isBogus()) {
     THROW_NEW_ERROR_RETURN_VALUE(
         isolate,

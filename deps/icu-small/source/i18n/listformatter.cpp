@@ -415,11 +415,13 @@ UnicodeString& ListFormatter::format_(
         if (index == 0) {
             offset = appendTo.length();
         }
+#if U_ICU_VERSION_MAJOR_NUM >= 63
         if (handler != nullptr) {
             handler->addAttribute(ULISTFMT_ELEMENT_FIELD,
                                   appendTo.length(),
                                   appendTo.length() + items[0].length());
         }
+#endif
         appendTo.append(items[0]);
         return appendTo;
     }
@@ -484,6 +486,7 @@ UnicodeString& ListFormatter::format_(
         // If there are already some data in appendTo, we need to adjust the index
         // by shifting that lenght while insert into handler.
         int32_t shift = appendTo.length() + prefixLength;
+#if U_ICU_VERSION_MAJOR_NUM >= 63
         // Output the ULISTFMT_ELEMENT_FIELD in the order of the input elements
         for (int32_t i = 0; i < nItems; ++i) {
             offsets[i + nItems] = offsets[i] + items[i].length() + shift;
@@ -493,6 +496,7 @@ UnicodeString& ListFormatter::format_(
                 offsets[i],  // index
                 offsets[i + nItems]);  // limit
         }
+#endif
         // The locale pattern may reorder the items (such as in ur-IN locale),
         // so we cannot assume the array is in accendning order.
         // To handle the edging case, just insert the two ends into the array

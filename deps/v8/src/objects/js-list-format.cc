@@ -284,7 +284,9 @@ MaybeHandle<JSArray> GenerateListFormatParts(
   Handle<String> substring;
   for (const icu::FieldPosition pos : positions) {
     CHECK(pos.getBeginIndex() >= prev_item_end_index);
+#if U_ICU_VERSION_MAJOR_NUM >= 63
     CHECK(pos.getField() == ULISTFMT_ELEMENT_FIELD);
+#endif
     if (pos.getBeginIndex() != prev_item_end_index) {
       ASSIGN_RETURN_ON_EXCEPTION(
           isolate, substring,
@@ -323,11 +325,13 @@ std::vector<icu::FieldPosition> GenerateFieldPosition(
   icu::FieldPosition pos;
   while (iter.next(pos)) {
     // Only take the information of the ULISTFMT_ELEMENT_FIELD field.
+#if U_ICU_VERSION_MAJOR_NUM >= 63
     if (pos.getField() == ULISTFMT_ELEMENT_FIELD) {
       positions.push_back(pos);
     }
+#endif
   }
-  // Because the format may reoder the items, ICU FieldPositionIterator
+  // Because the format may reorder the items, ICU FieldPositionIterator
   // keep the order for FieldPosition based on the order of the input items.
   // But the formatToParts API in ECMA402 expects in formatted output order.
   // Therefore we have to sort based on beginIndex of the FieldPosition.
@@ -436,8 +440,12 @@ MaybeHandle<JSArray> JSListFormat::FormatListToParts(
   UErrorCode status = U_ZERO_ERROR;
   icu::UnicodeString formatted;
   icu::FieldPositionIterator iter;
+#if U_ICU_VERSION_MAJOR_NUM >= 63
   formatter->format(array.data(), static_cast<int32_t>(array.size()), formatted,
                     &iter, status);
+#else
+  if(U_SUCCESS(status)) status = U_REGEX_OCTAL_TOO_BIG;
+#endif
   DCHECK(U_SUCCESS(status));
 
   std::vector<icu::FieldPosition> field_positions = GenerateFieldPosition(iter);
